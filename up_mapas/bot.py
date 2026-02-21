@@ -2,211 +2,166 @@ import pyautogui
 import keyboard
 import time
 import threading
+import pygetwindow as gw
 
 # ===== CONFIGURAÇÕES =====
+NOME_DA_JANELA = "CABAL"  # Altere para o nome exato da janela do jogo
 
-# Barra de HP
+# Barra de HP (Coordenadas)
 HP_BAR_START = 82
 HP_BAR_END = 276
 HP_BAR_Y = 49
 
-# ===== THRESHOLDS =====
+# ===== THRESHOLDS (Limiares) =====
 CRITICAL_THRESHOLD = 25
-CRITICAL_EXIT = 30
-
+CRITICAL_EXIT = 35        # Um pouco maior que o threshold para evitar "flicker"
 SMALL_HEAL_THRESHOLD = 70
 BIG_HEAL_THRESHOLD = 40
 
 # ===== CURAS =====
-
 SMALL_HEAL_KEY = "0"
 SMALL_HEAL_COOLDOWN = 3
-SMALL_HEAL_ANIMATION = 1
-
 BIG_HEAL_KEY = "9"
 BIG_HEAL_COOLDOWN = 70
-BIG_HEAL_ANIMATION = 0
 
+# Histórico de cura
 ultima_small_heal = 0
 ultima_big_heal = 0
 
 # Ataque
-SKILL_KEYS = ["z", "3", "4", "5", "6"] # "space"
-
-# Delays
+SKILL_KEYS = ["z", "3", "4", "5", "6", "space"]
 DELAY_SKILL = 0.2
 DELAY_LOOP = 0.05
 
+# Controle Global
 rodando = False
 modo_critico = False
 
+# --- FUNÇÕES DE SUPORTE ---
+
+def janela_ativa():
+    """Verifica se o Cabal é a janela em foco."""
+    try:
+        janela = gw.getActiveWindow()
+        return janela is not None and NOME_DA_JANELA.lower() in janela.title.lower()
+    except:
+        return False
 
 def calcular_hp_percentual():
     largura = HP_BAR_END - HP_BAR_START
-
-    screenshot = pyautogui.screenshot(
-        region=(HP_BAR_START, HP_BAR_Y, largura, 1)
-    )
-
+    # Captura apenas a linha da barra de HP para performance
+    screenshot = pyautogui.screenshot(region=(HP_BAR_START, HP_BAR_Y, largura, 1))
+    
     pixels_vida = 0
-
     for x in range(largura):
         r, g, b = screenshot.getpixel((x, 0))
+        # Lógica para detectar o vermelho da barra
         if r > g + 25 and r > b + 25:
             pixels_vida += 1
+    
+    return (pixels_vida / largura) * 100 if largura > 0 else 0
 
-    return (pixels_vida / largura) * 100
-
-
-def pode_small():
-    return time.time() - ultima_small_heal >= SMALL_HEAL_COOLDOWN
-
-
-def pode_big():
-    return time.time() - ultima_big_heal >= BIG_HEAL_COOLDOWN
-
-
-def usar_small():
-    global ultima_small_heal
-
-    print("\n>>> CURA PEQUENA")
-
+def usar_cura(tipo):
+    global ultima_small_heal, ultima_big_heal
+    
+    # Cancela casting atual com ESC (comum no Cabal para garantir a cura)
     keyboard.press_and_release("esc")
     time.sleep(0.05)
+    
+    if tipo == "BIG":
+        print("\n>>> USANDO CURA GRANDE (9) <<<")
+        keyboard.press_and_release(BIG_HEAL_KEY)
+        ultima_big_heal = time.time()
+    else:
+        print("\n>>> USANDO CURA PEQUENA (0) <<<")
+        keyboard.press_and_release(SMALL_HEAL_KEY)
+        ultima_small_heal = time.time()
 
-    keyboard.press_and_release(SMALL_HEAL_KEY)
-    ultima_small_heal = time.time()
+# --- THREADS ---
 
-    time.sleep(SMALL_HEAL_ANIMATION)
-
-
-def usar_big():
-    global ultima_big_heal
-
-    print("\n>>> CURA GRANDE !!!")
-
-    keyboard.press_and_release("esc")
-    time.sleep(0.05)
-
-    keyboard.press_and_release(BIG_HEAL_KEY)
-    ultima_big_heal = time.time()
-
-    time.sleep(BIG_HEAL_ANIMATION)
-
-
-def atacar():
-    for skill in SKILL_KEYS:
-        keyboard.press_and_release(skill)
-        time.sleep(DELAY_SKILL)
-
+def loop_ataque():
+    """Roda em paralelo ao HP para não interromper a leitura da vida."""
+    global rodando, modo_critico
+    while rodando:
+        if janela_ativa() and not modo_critico:
+            for skill in SKILL_KEYS:
+                if not rodando or modo_critico or not janela_ativa(): 
+                    break
+                keyboard.press_and_release(skill)
+                time.sleep(DELAY_SKILL)
+        else:
+            time.sleep(0.2) # Dorme um pouco se estiver fora da janela ou em perigo
 
 def loop_bot():
-    global rodando, modo_critico
+    global rodando, modo_critico, ultima_small_heal, ultima_big_heal
 
-    print("Bot iniciado.")
-
+    print(f"Bot Monitorando Janela: [{NOME_DA_JANELA}]")
+    
     hp_anterior = calcular_hp_percentual()
     tempo_anterior = time.time()
 
     while rodando:
+        if not janela_ativa():
+            time.sleep(0.5)
+            continue
 
         agora = time.time()
         hp = calcular_hp_percentual()
 
-        # ===== CÁLCULO DE DANO POR SEGUNDO =====
+        # Cálculo de DPS e Previsão (Sua lógica original)
         delta_hp = hp_anterior - hp
         delta_tempo = agora - tempo_anterior
-
-        dps_recebido = 0
-        if delta_tempo > 0:
-            dps_recebido = delta_hp / delta_tempo
-
-        # Atualiza histórico
+        dps_recebido = max(0, delta_hp / delta_tempo) if delta_tempo > 0 else 0
+        
         hp_anterior = hp
         tempo_anterior = agora
 
-        # ===== TEMPO ATÉ MORRER (PREVISÃO) =====
-        tempo_ate_morrer = float("inf")
-        if dps_recebido > 0:
-            tempo_ate_morrer = hp / dps_recebido
+        tempo_ate_morrer = hp / dps_recebido if dps_recebido > 0 else 999
+        cd_big = max(0, BIG_HEAL_COOLDOWN - (agora - ultima_big_heal))
+        cd_small = max(0, SMALL_HEAL_COOLDOWN - (agora - ultima_small_heal))
 
-        # ===== TEMPO RESTANTE BIG HEAL =====
-        tempo_big_restante = BIG_HEAL_COOLDOWN - (agora - ultima_big_heal)
+        print(f"HP: {hp:.1f}% | DPS: {dps_recebido:.1f} | Morte em: {tempo_ate_morrer:.1f}s | CD Big: {cd_big:.1f}s", end="\r")
 
-        if tempo_big_restante < 0:
-            tempo_big_restante = 0
+        # --- LÓGICA DE DECISÃO ---
 
-        print(
-            f"HP:{hp:.1f}% | DPS:{dps_recebido:.2f} | "
-            f"T_Morte:{tempo_ate_morrer:.1f}s | "
-            f"BigCD:{tempo_big_restante:.1f}s",
-            end="\r"
-        )
-
-        # ===== MODO CRÍTICO PADRÃO =====
-        if hp < CRITICAL_THRESHOLD:
+        # 1. Modo Crítico (Entrada e Saída)
+        if hp < CRITICAL_THRESHOLD or tempo_ate_morrer < cd_big:
             modo_critico = True
-
-        if modo_critico and hp > CRITICAL_EXIT:
+        elif hp > CRITICAL_EXIT:
             modo_critico = False
-            print("\nSaindo do modo crítico")
 
-        # ===== MODO SOBREVIVÊNCIA PREDITIVO =====
-        sobrevivencia_extrema = (
-            tempo_ate_morrer < tempo_big_restante
-        )
-
-        if sobrevivencia_extrema:
-            print("\n>>> SOBREVIVÊNCIA EXTREMA <<<")
-
-            if pode_small():
-                usar_small()
-
-            time.sleep(DELAY_LOOP)
-            continue
-
-        # ===== MODO CRÍTICO =====
+        # 2. Execução das Curas
         if modo_critico:
+            if cd_big == 0:
+                usar_cura("BIG")
+            elif cd_small == 0:
+                usar_cura("SMALL")
+        
+        elif hp < SMALL_HEAL_THRESHOLD:
+            if hp < BIG_HEAL_THRESHOLD and cd_big == 0:
+                usar_cura("BIG")
+            elif cd_small == 0:
+                usar_cura("SMALL")
 
-            if pode_big():
-                usar_big()
-
-            elif pode_small():
-                usar_small()
-
-            time.sleep(DELAY_LOOP)
-            continue
-
-        # ===== COMPORTAMENTO NORMAL =====
-        if hp < BIG_HEAL_THRESHOLD and pode_big():
-            usar_big()
-
-        elif hp < SMALL_HEAL_THRESHOLD and pode_small():
-            usar_small()
-
-        atacar()
         time.sleep(DELAY_LOOP)
 
-    print("\nBot parado.")
-
-
+# --- CONTROLES DE INÍCIO ---
 
 def iniciar():
     global rodando
     if not rodando:
         rodando = True
-        threading.Thread(target=loop_bot).start()
-
+        threading.Thread(target=loop_bot, daemon=True).start()
+        threading.Thread(target=loop_ataque, daemon=True).start()
+        print("\n[ON] Bot em execução...")
 
 def parar():
     global rodando
     rodando = False
-
+    print("\n[OFF] Bot desligado.")
 
 keyboard.add_hotkey("F7", iniciar)
 keyboard.add_hotkey("F8", parar)
 
-print("Pressione F7 para iniciar o bot.")
-print("Pressione F8 para parar o bot.")
-
+print("F7: Iniciar | F8: Parar")
 keyboard.wait()
