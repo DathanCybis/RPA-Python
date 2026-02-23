@@ -17,7 +17,7 @@ SP_COR_RGB = (255, 181, 98)
 
 # ===== TECLAS =====
 SELECT_MOB_KEY = "z"
-LOOT_KEY = "space"
+LOOT_KEY = "space" 
 NORMAL_SKILLS = ["1", "2", "3", "4"]
 BM_KEY = "5"            
 AURA_KEY = "6"          
