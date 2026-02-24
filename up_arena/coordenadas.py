@@ -40,3 +40,5 @@ while True:
 # passo 9 = 0, 942 - dash2 (depois de qbrar o portão) portão
 # passo 10 = 976, 1008 - dash1
 # passo 11 = 461, 955 - dash2, 1, 2, 1, 2, 1
+
+#portal: 1662, 529
