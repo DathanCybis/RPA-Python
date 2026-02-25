@@ -307,3 +307,4 @@ keyboard.add_hotkey('f7', iniciar)
 keyboard.add_hotkey('f8', lambda: exec("global rodando; rodando=False"))
 print("F7: Iniciar | F8: Parar")
 keyboard.wait()
+ 
