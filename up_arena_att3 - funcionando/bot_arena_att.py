@@ -21,9 +21,9 @@ def caminho_img(nome):
 # ==========================================================
 #        CONFIGURAÇÕES DE SELEÇÃO E NAVEGAÇÃO
 # ==========================================================
-ARENA_INICIAL = 3      # De qual arena começar
-ARENA_FINAL   = 3      # Em qual arena terminar
-ORDEM_CRESCENTE = True # True para (2,3) | False para (3,2)
+ARENA_INICIAL = 6      # De qual arena começar
+ARENA_FINAL   = 6      # Em qual arena terminar
+ORDEM_CRESCENTE = False # True para (2,3) | False para (3,2)
 
 PASSO_INICIAL = 1      # Escolha o passo para a PRIMEIRA execução
 # ==========================================================
