@@ -21,8 +21,8 @@ def caminho_img(nome):
 # ==========================================================
 #        CONFIGURAÇÕES DE SELEÇÃO E NAVEGAÇÃO
 # ==========================================================
-ARENA_INICIAL = 1      # De qual arena começar
-ARENA_FINAL   = 5      # Em qual arena terminar
+ARENA_INICIAL = 6      # De qual arena começar
+ARENA_FINAL   = 6      # Em qual arena terminar
 ORDEM_CRESCENTE = False # True para (2,3) | False para (3,2)
 
 PASSO_INICIAL = 1      # Escolha o passo para a PRIMEIRA execução
@@ -34,7 +34,7 @@ HP_BAR_START, HP_BAR_END, HP_BAR_Y = 82, 276, 49
 
 # Teclas
 SELECT_MOB_KEY, LOOT_KEY = "z", "space"
-NORMAL_SKILLS = ["1", "2", "3", "4"] 
+NORMAL_SKILLS = ["1", "2", "3", "4", "5"] 
 DASH_1, DASH_2 = "1", "2"
 SMALL_HEAL_KEY, BIG_HEAL_KEY = "0", "9"
 ZOOM_OUT_KEY = "-"
@@ -102,7 +102,7 @@ def combate_estavel():
     keyboard.press_and_release(SELECT_MOB_KEY)
     for sk in NORMAL_SKILLS:
         if not rodando: break
-        keyboard.press_and_release(sk); time.sleep(0.4)
+        keyboard.press_and_release(sk); time.sleep(0.1) # time.sleep(0.4)
 
 def thread_cura():
     global modo_critico, ultima_big_heal, ultima_small_heal
