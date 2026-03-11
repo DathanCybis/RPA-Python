@@ -31,10 +31,10 @@ ultima_small_heal = 0
 ultima_big_heal = 0
 
 # Ataque
-SKILL_KEYS = ["z", "1", "2", "3", "4", "space"]
+SKILL_KEYS = ["z", "1", "2", "3", "4", "5", "space"]
 
 # Delays
-DELAY_SKILL = 0.2
+DELAY_SKILL = 0.1
 DELAY_LOOP = 0.05
 
 rodando = False
