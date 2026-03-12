@@ -1,0 +1,276 @@
+{
+    "Dungeons": {
+        "Parte do mapa": {
+            "passo1": {
+                "coord": [1028, 59],
+                "click_btn": "Esquerdo",
+                "dashs": [1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo2": {
+                "coord": [848, 296],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo3": {
+                "coord": [1110, 881],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo4": {
+                "coord": [815, 759],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo5": {
+                "coord": [105, 403],
+                "click_btn": "Direito",
+                "dashs": [1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo6": {
+                "coord": [134, 940],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo7": {
+                "coord": [263, 129],
+                "click_btn": "Direito",
+                "dashs": [1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo8": {
+                "coord": [801, 425],
+                "click_btn": "Direito",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 5,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo9": {
+                "coord": [555, 959],
+                "click_btn": "Direito",
+                "dashs": [1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo10": {
+                "coord": [1528, 798],
+                "click_btn": "Direito",
+                "dashs": [1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo11": {
+                "coord": [438, 925],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 5,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo12": {
+                "coord": [133, 245],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo13": {
+                "coord": [450, 419],
+                "click_btn": "Direito",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 5,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo14": {
+                "coord": [1020, 192],
+                "click_btn": "Esquerdo",
+                "dashs": [1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo15": {
+                "coord": [952, 194],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo16": {
+                "coord": [154, 719],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo17": {
+                "coord": [793, 48],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1, 2, 1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo18": {
+                "coord": [312, 269],
+                "click_btn": "Direito",
+                "dashs": [1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo19": {
+                "coord": [1458, 413],
+                "click_btn": "Direito",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 5,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo20": {
+                "coord": [1070, 43],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo21": {
+                "coord": [1038, 236],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo22": {
+                "coord": [176, 715],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo23": {
+                "coord": [1169, 55],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo24": {
+                "coord": [1805, 493],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo25": {
+                "coord": [1358, 921],
+                "click_btn": "Direito",
+                "dashs": [1, 2],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo26": {
+                "coord": [930, 470],
+                "click_btn": "Direito",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 5,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo27": {
+                "coord": [1565, 911],
+                "click_btn": "Direito",
+                "dashs": [1, 2, 1, 2, 1, 2, 1, 2],
+                "espera_pos": 5,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo28": {
+                "coord": [872, 589],
+                "click_btn": "Direito",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 10,
+                "is_boss": false,
+                "loot_final": true
+            },
+            "passo29": {
+                "coord": [984, 324],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            },
+            "passo30": {
+                "coord": [870, 811],
+                "click_btn": "Esquerdo",
+                "dashs": [],
+                "espera_pos": 2,
+                "tempo_ataque": 0,
+                "is_boss": false,
+                "loot_final": false
+            }
+        }
+    }
+}
