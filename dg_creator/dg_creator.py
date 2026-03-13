@@ -8,7 +8,7 @@ import ctypes
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# ===== AJUSTE DE PRECISÃO =====
+# ===== PRECISÃO DE TELA (DPI AWARE) =====
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except:
@@ -17,248 +17,252 @@ except:
 PASTA_APP = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO_CONFIG = os.path.join(PASTA_APP, "config_dgs.json")
 
-# Cores Dark Mode
-BG_DARK = "#1e1e1e"
-BG_PANEL = "#2d2d2d"
-FG_WHITE = "#ffffff"
-ACCENT_BLUE = "#3794ff"
+# Cores e Estilo
+BG_DARK = "#121212"
+BG_PANEL = "#1e1e1e"
+FG_WHITE = "#e0e0e0"
+ACCENT_GREEN = "#00ff7f"
+ACCENT_RED = "#ff4d4d"
 
-def caminho_img(nome):
-    if not nome.endswith('.png'): nome += '.png'
-    # Retorna o caminho absoluto completo
-    return os.path.normpath(os.path.join(PASTA_APP, nome))
-
-# ==========================================================
-#        CONFIGURAÇÕES TÉCNICAS
-# ==========================================================
-TECLAS = {
-    "combate": "f2", "movimento": "f3", "select": "z", "loot": "space",
-    "skills": ["1", "2", "3", "4", "5", "space"],
-    "dash_longo": "1", # Geralmente Dash maior
-    "dash_curto": "2"  # Geralmente Fade/Dash menor
-}
-
-# ==========================================================
-#        SISTEMA DE ARQUIVOS
-# ==========================================================
 def carregar_dados():
     if os.path.exists(ARQUIVO_CONFIG):
         try:
-            with open(ARQUIVO_CONFIG, 'r') as f:
-                return json.load(f)
+            with open(ARQUIVO_CONFIG, 'r', encoding='utf-8') as f: return json.load(f)
         except: return {"Dungeons": {}}
     return {"Dungeons": {}}
 
 def salvar_dados(dados):
-    with open(ARQUIVO_CONFIG, 'w') as f:
-        json.dump(dados, f, indent=4)
+    with open(ARQUIVO_CONFIG, 'w', encoding='utf-8') as f:
+        json.dump(dados, f, indent=4, ensure_ascii=False)
 
 # ==========================================================
-#        MOTOR DO BOT (LÓGICA DE EXECUÇÃO)
+#        MOTOR DO BOT
 # ==========================================================
 class BotEngine:
-    def __init__(self):
+    def __init__(self, callback_log):
         self.rodando = False
         self.dg_atual = ""
-        self.passo_inicial = 1
         self.total_ciclos = 1
         self.dados = carregar_dados()
+        self.callback_log = callback_log
+
+    def log(self, msg):
+        self.callback_log(msg)
 
     def verificar_imagem(self, img_nome):
-        path = caminho_img(img_nome)
-        if not os.path.exists(path):
-            # Se a imagem não existir, ele avisa no console e pula a verificação
-            print(f"[ERRO] Imagem não encontrada: {path}")
-            return False
-        try: 
-            return pyautogui.locateOnScreen(path, confidence=0.8) is not None
-        except Exception as e:
-            print(f"[AVISO] Erro ao processar imagem: {e}")
-            return False
+        path = os.path.join(PASTA_APP, f"{img_nome}.png")
+        if not os.path.exists(path): return False
+        try: return pyautogui.locateOnScreen(path, confidence=0.7) is not None
+        except: return False
 
-    def combate_estavel(self, trava_z=False):
-        if not trava_z:
-            keyboard.press_and_release(TECLAS["select"])
-        for sk in TECLAS["skills"]:
+    def resetar_zoom(self, segundos):
+        if not self.rodando: return
+        keyboard.press('-')
+        time.sleep(segundos)
+        keyboard.release('-')
+        time.sleep(0.3)
+
+    def soltar_skills(self):
+        for sk in ["1", "2", "3", "4", "5", "space"]:
             if not self.rodando: break
             keyboard.press_and_release(sk)
             time.sleep(0.08)
 
-    def executar_passo(self, config_passo):
+    def executar_passo(self, p, nome_p, ultimo_esq):
         if not self.rodando: return
+        self.log(f"Indo para: {nome_p}")
 
-        # 1. Movimentação
-        keyboard.press_and_release(TECLAS["movimento"])
-        time.sleep(0.15)
+        # Lógica de Zoom
+        if p.get("reset_zoom", False): self.resetar_zoom(3.0)
+        elif ultimo_esq and p.get("click_btn") == "Direito": self.resetar_zoom(1.5)
+
+        # Movimentação
+        keyboard.press_and_release("f3")
+        time.sleep(0.1)
+        btn = 'right' if p.get("click_btn") == "Direito" else 'left'
+        pyautogui.click(p["coord"][0], p["coord"][1], button=btn)
         
-        btn = 'right' if config_passo.get("click_btn", "Direito") == "Direito" else 'left'
-        pyautogui.click(config_passo["coord"][0], config_passo["coord"][1], button=btn)
-        
-        # --- AJUSTE DE TEMPO DOS DASHS ---
-        for d in config_passo.get("dashs", []):
+        for d in p.get("dashs", []):
             if not self.rodando: break
-            if str(d) == "1":
-                keyboard.press_and_release(TECLAS["dash_longo"])
-                time.sleep(1) # Tempo do Dash Maior
-            else:
-                keyboard.press_and_release(TECLAS["dash_curto"])
-                time.sleep(1) # Tempo do Dash Menor
+            keyboard.press_and_release(str(d)); time.sleep(1.0)
 
-        # Espera de chegada (configurável no JSON)
-        espera = config_passo.get("espera_pos", 0)
-        if espera > 0:
-            time.sleep(espera)
+        time.sleep(p.get("espera_pos", 1))
 
-        # 2. Combate
-        keyboard.press_and_release(TECLAS["combate"])
-        if config_passo.get("is_boss", False):
+        # Combate Inteligente
+        if p.get("is_boss", False):
+            self.log("Alvo: BOSS")
+            keyboard.press_and_release("f2")
             while self.rodando:
-                boss_visivel = self.verificar_imagem("icone_boss")
-                self.combate_estavel(trava_z=boss_visivel)
-                keyboard.press_and_release(TECLAS["loot"])
-                # Checa se o baú/dg acabou
-                if self.verificar_imagem("botao_ok"): 
-                    print("[BOT] Botão OK detectado. Finalizando combate.")
-                    break
-                time.sleep(0.05)
-        elif config_passo.get("tempo_ataque", 0) > 0:
-            fim = time.time() + config_passo["tempo_ataque"]
-            while time.time() < fim and self.rodando:
-                self.combate_estavel()
-                time.sleep(0.1)
+                # Só aperta Z se o ícone do boss NÃO estiver na tela
+                if not self.verificar_imagem("icone_boss"):
+                    keyboard.press_and_release("z")
+                    time.sleep(0.2)
+                
+                self.soltar_skills()
+                
+                if self.verificar_imagem("botao_ok"): break
+                if not self.verificar_imagem("icone_boss"):
+                    time.sleep(1.2)
+                    if not self.verificar_imagem("icone_boss"): break
 
-        # 3. Loot
-        if config_passo.get("loot_final", False):
-            for _ in range(25):
+        elif p.get("tempo_ataque", 0) > 0:
+            self.log(f"Ataque: {p['tempo_ataque']}s")
+            keyboard.press_and_release("f2")
+            fim = time.time() + p["tempo_ataque"]
+            while time.time() < fim and self.rodando:
+                keyboard.press_and_release("z")
+                self.soltar_skills()
+
+        if p.get("loot_final", False):
+            self.log("Coletando Loot...")
+            for _ in range(20):
                 if not self.rodando: break
-                keyboard.press_and_release(TECLAS["loot"])
-                time.sleep(0.1)
-        
-        time.sleep(0.3)
+                keyboard.press_and_release("space"); time.sleep(0.1)
 
     def thread_principal(self):
         for c in range(self.total_ciclos):
             if not self.rodando: break
-            print(f"[LOOP] Iniciando Ciclo {c+1}/{self.total_ciclos}")
+            self.log(f"Ciclo {c+1}/{self.total_ciclos}")
             
-            passos = self.dados["Dungeons"][self.dg_atual]
-            chaves = sorted(passos.keys(), key=lambda x: int(x.split("passo")[1]))
+            # Buffs Iniciais
+            keyboard.press_and_release("f3")
+            for b in ["3", "4"]: keyboard.press_and_release(b); time.sleep(1.3)
             
-            inicio_efetivo = self.passo_inicial if c == 0 else 1
-            chaves_para_rodar = [k for k in chaves if int(k.split("passo")[1]) >= inicio_efetivo]
-
-            for k in chaves_para_rodar:
+            passos_dict = self.dados["Dungeons"][self.dg_atual]
+            chaves = sorted(passos_dict.keys(), key=lambda x: int(x.split("passo")[1]))
+            
+            ultimo_esq = False
+            for k in chaves:
                 if not self.rodando: break
-                self.executar_passo(passos[k])
-            
-            time.sleep(2) 
+                self.executar_passo(passos_dict[k], k, ultimo_esq)
+                ultimo_esq = (passos_dict[k].get("click_btn") == "Esquerdo")
         
         self.rodando = False
-        print("[SISTEMA] Finalizado.")
+        self.log("Fim da Rota")
 
 # ==========================================================
-#        INTERFACE GRÁFICA (GUI)
+#        INTERFACE GRÁFICA + OVERLAY
 # ==========================================================
 class AppDG:
     def __init__(self, root):
-        self.engine = BotEngine()
+        self.engine = BotEngine(self.update_overlay)
         self.root = root
-        self.root.title("Cabal DG Creator Pro - v2.2")
-        self.root.geometry("600x500")
+        self.root.title("Cabal Pro v4.1")
+        self.root.geometry("500x600")
         self.root.configure(bg=BG_DARK)
         
-        self.setup_styles()
-        self.setup_ui()
-        self.atualizar_combo_dgs()
+        self.setup_main_ui()
+        self.setup_overlay()
+        self.atualizar_combo()
         
-        keyboard.add_hotkey('f9', self.gravar_coordenada)
+        # Atalhos Globais
         keyboard.add_hotkey('f7', self.iniciar_bot)
         keyboard.add_hotkey('f8', self.parar_bot)
+        keyboard.add_hotkey('f9', self.gravar_coordenada)
 
-    def setup_styles(self):
+    def setup_main_ui(self):
         style = ttk.Style()
         style.theme_use('clam')
-        style.configure("TFrame", background=BG_DARK)
-        style.configure("TLabel", background=BG_DARK, foreground=FG_WHITE)
-        style.configure("TLabelframe", background=BG_DARK, foreground=ACCENT_BLUE)
-        style.configure("TLabelframe.Label", background=BG_DARK, foreground=ACCENT_BLUE)
-        style.configure("TButton", background=BG_PANEL, foreground=FG_WHITE)
+        
+        main_frame = ttk.Frame(self.root, padding=15)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-    def setup_ui(self):
-        container = ttk.Frame(self.root)
-        container.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+        ttk.Label(main_frame, text="Dungeon Ativa:").pack(anchor="w")
+        self.combo_dg = ttk.Combobox(main_frame, postcommand=self.atualizar_combo)
+        self.combo_dg.pack(fill=tk.X, pady=5)
+        self.combo_dg.bind("<<ComboboxSelected>>", self.mostrar_passos)
 
-        panel = ttk.LabelFrame(container, text=" Controle de Dungeons ", padding=10)
-        panel.pack(fill=tk.X)
+        ttk.Label(main_frame, text="Quantidade de Ciclos:").pack(anchor="w")
+        self.ent_ciclos = ttk.Entry(main_frame); self.ent_ciclos.insert(0, "1")
+        self.ent_ciclos.pack(fill=tk.X, pady=5)
 
-        ttk.Label(panel, text="DG:").grid(row=0, column=0)
-        self.combo_dg = ttk.Combobox(panel, width=15)
-        self.combo_dg.grid(row=0, column=1, padx=5)
-        self.combo_dg.bind("<<ComboboxSelected>>", self.carregar_passos_na_lista)
+        self.lista = tk.Listbox(main_frame, bg=BG_PANEL, fg=FG_WHITE, font=("Consolas", 10), borderwidth=0)
+        self.lista.pack(fill=tk.BOTH, expand=True, pady=10)
 
-        ttk.Label(panel, text="Ciclos:").grid(row=0, column=2, padx=5)
-        self.ent_ciclos = ttk.Entry(panel, width=5)
-        self.ent_ciclos.insert(0, "1"); self.ent_ciclos.grid(row=0, column=3)
-
-        self.lista_passos = tk.Listbox(container, bg=BG_PANEL, fg=FG_WHITE, borderwidth=0, font=("Consolas", 10))
-        self.lista_passos.pack(fill=tk.BOTH, expand=True, pady=10)
-
-        footer = ttk.Label(container, text="F7: Iniciar | F8: Parar | F9: Gravar Novo Ponto", font=("Arial", 9, "italic"))
+        tk.Button(main_frame, text="REMOVER PASSO SELECIONADO", bg=ACCENT_RED, fg="white", command=self.remover_passo).pack(fill=tk.X)
+        
+        footer = tk.Label(main_frame, text="F7: Start | F8: Stop | F9: Gravar", font=("Arial", 10, "bold"), pady=10)
         footer.pack()
 
-    def atualizar_combo_dgs(self):
+    def setup_overlay(self):
+        self.overlay = tk.Toplevel(self.root)
+        self.overlay.geometry("200x100+10+300") # Posição: Esquerda Meio
+        self.overlay.overrideredirect(True)
+        self.overlay.attributes('-topmost', True, '-alpha', 0.7)
+        self.overlay.configure(bg="#000000")
+        
+        self.lbl_ov_status = tk.Label(self.overlay, text="BOT PRONTO", fg=ACCENT_GREEN, bg="#000000", font=("Consolas", 10, "bold"))
+        self.lbl_ov_status.pack(expand=True)
+        
+        tk.Label(self.overlay, text="[F8] PARAR", fg="white", bg="#333333", font=("Arial", 8)).pack(fill=tk.X)
+
+    def update_overlay(self, msg):
+        self.lbl_ov_status.config(text=msg)
+
+    def atualizar_combo(self):
         self.engine.dados = carregar_dados()
         self.combo_dg['values'] = list(self.engine.dados.get("Dungeons", {}).keys())
 
-    def carregar_passos_na_lista(self, event=None):
-        self.lista_passos.delete(0, tk.END)
+    def mostrar_passos(self, event=None):
+        self.lista.delete(0, tk.END)
         dg = self.combo_dg.get()
-        if dg in self.engine.dados.get("Dungeons", {}):
+        if dg in self.engine.dados["Dungeons"]:
             passos = self.engine.dados["Dungeons"][dg]
             for k in sorted(passos.keys(), key=lambda x: int(x.split("passo")[1])):
                 p = passos[k]
-                self.lista_passos.insert(tk.END, f"{k} | Click: {p.get('click_btn')} | Dashs: {p.get('dashs')}")
+                self.lista.insert(tk.END, f"{k}: {p['click_btn']} | Boss: {p['is_boss']}")
+
+    def remover_passo(self):
+        sel = self.lista.curselection()
+        if not sel: return
+        dg = self.combo_dg.get()
+        passos = self.engine.dados["Dungeons"][dg]
+        chaves = sorted(passos.keys(), key=lambda x: int(x.split("passo")[1]))
+        del passos[chaves[sel[0]]]
+        
+        # Reorganizar
+        novos = {f"passo{i}": passos[k] for i, k in enumerate(sorted(passos.keys(), key=lambda x: int(x.split("passo")[1])), 1)}
+        self.engine.dados["Dungeons"][dg] = novos
+        salvar_dados(self.engine.dados); self.mostrar_passos()
 
     def gravar_coordenada(self):
         coord = pyautogui.position()
         dg = self.combo_dg.get()
-        if not dg:
-            messagebox.showwarning("Aviso", "Digite um nome para a DG no campo acima!")
-            return
-
-        win = tk.Toplevel(self.root); win.configure(bg=BG_DARK); win.title("Gravar Passo")
+        if not dg: return
         
-        ttk.Label(win, text=f"Posição: {coord}").pack(pady=5)
+        win = tk.Toplevel(self.root); win.title("Gravar Passo"); win.geometry("280x450")
+        win.attributes('-topmost', True); win.configure(bg=BG_PANEL)
         
-        ttk.Label(win, text="Botão Mouse:").pack()
+        ttk.Label(win, text=f"Coord: {coord.x}, {coord.y}").pack(pady=5)
+        
+        ttk.Label(win, text="Botão:").pack()
         btn_c = ttk.Combobox(win, values=["Direito", "Esquerdo"]); btn_c.set("Direito"); btn_c.pack()
-
-        ttk.Label(win, text="Dashs (1=Maior, 2=Menor):").pack()
+        
+        ttk.Label(win, text="Dashs (ex: 1,2):").pack()
         ent_d = ttk.Entry(win); ent_d.pack()
         
-        ttk.Label(win, text="Espera após mover (seg):").pack()
+        ttk.Label(win, text="Tempo Ataque:").pack()
+        ent_atq = ttk.Entry(win); ent_atq.insert(0, "0"); ent_atq.pack()
+        
+        ttk.Label(win, text="Espera pós Dash:").pack()
         ent_w = ttk.Entry(win); ent_w.insert(0, "2"); ent_w.pack()
-
-        v_b = tk.BooleanVar(); ttk.Checkbutton(win, text="É Boss?", variable=v_b).pack()
+        
+        v_z = tk.BooleanVar(); ttk.Checkbutton(win, text="Resetar Zoom (3s)?", variable=v_z).pack()
+        v_b = tk.BooleanVar(); ttk.Checkbutton(win, text="É Boss? (Anti-Z)", variable=v_b).pack()
+        v_l = tk.BooleanVar(); ttk.Checkbutton(win, text="Loot Final?", variable=v_l).pack()
 
         def salvar():
-            if "Dungeons" not in self.engine.dados: self.engine.dados["Dungeons"] = {}
             if dg not in self.engine.dados["Dungeons"]: self.engine.dados["Dungeons"][dg] = {}
-            
             num = len(self.engine.dados["Dungeons"][dg]) + 1
             self.engine.dados["Dungeons"][dg][f"passo{num}"] = {
-                "coord": [coord.x, coord.y],
-                "click_btn": btn_c.get(),
+                "coord": [coord.x, coord.y], "click_btn": btn_c.get(),
                 "dashs": [int(x.strip()) for x in ent_d.get().split(",")] if ent_d.get() else [],
-                "espera_pos": float(ent_w.get() or 2),
-                "tempo_ataque": 0,
-                "is_boss": v_b.get(),
-                "loot_final": False
+                "espera_pos": float(ent_w.get() or 2), "tempo_ataque": float(ent_atq.get() or 0),
+                "is_boss": v_b.get(), "loot_final": v_l.get(), "reset_zoom": v_z.get()
             }
-            salvar_dados(self.engine.dados)
-            self.atualizar_combo_dgs(); self.carregar_passos_na_lista(); win.destroy()
+            salvar_dados(self.engine.dados); self.mostrar_passos(); win.destroy()
 
-        ttk.Button(win, text="SALVAR", command=salvar).pack(pady=10)
+        tk.Button(win, text="SALVAR", bg=ACCENT_GREEN, command=salvar).pack(pady=15)
 
     def iniciar_bot(self):
         if not self.engine.rodando:
@@ -270,6 +274,7 @@ class AppDG:
 
     def parar_bot(self):
         self.engine.rodando = False
+        self.update_overlay("BOT PARADO")
 
 if __name__ == "__main__":
     root = tk.Tk()

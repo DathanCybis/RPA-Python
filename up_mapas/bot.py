@@ -165,3 +165,4 @@ print("Pressione F7 para iniciar o bot.")
 print("Pressione F8 para parar o bot.")
 
 keyboard.wait() 
+0
