@@ -6,9 +6,9 @@ import threading
 # ===== CONFIGURAÇÕES =====
 
 # Barra de HP
-HP_BAR_START = 82
-HP_BAR_END = 276
-HP_BAR_Y = 49
+HP_BAR_START = 77
+HP_BAR_END = 277
+HP_BAR_Y = 39
 
 # ===== THRESHOLDS =====
 CRITICAL_THRESHOLD = 25
@@ -34,7 +34,7 @@ ultima_big_heal = 0
 SKILL_KEYS = ["z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "space"]
 
 # Delays
-DELAY_SKILL = 0.01
+DELAY_SKILL = 0.015
 DELAY_LOOP = 0.05
 
 rodando = False
