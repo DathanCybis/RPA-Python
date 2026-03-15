@@ -34,7 +34,7 @@ ultima_big_heal = 0
 SKILL_KEYS = ["z", "1", "2", "3", "4", "5", "space"]
 
 # Delays
-DELAY_SKILL = 0.1
+DELAY_SKILL = 0.02
 DELAY_LOOP = 0.05
 
 rodando = False
