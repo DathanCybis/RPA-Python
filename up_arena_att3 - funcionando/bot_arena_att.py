@@ -34,7 +34,7 @@ HP_BAR_START, HP_BAR_END, HP_BAR_Y = 82, 276, 49
 
 # Teclas
 SELECT_MOB_KEY, LOOT_KEY = "z", "space"
-NORMAL_SKILLS = ["1", "2", "3", "4", "5"] 
+NORMAL_SKILLS = ["1", "2", "3", "4"] 
 DASH_1, DASH_2 = "1", "2"
 SMALL_HEAL_KEY, BIG_HEAL_KEY = "0", "9"
 ZOOM_OUT_KEY = "-"
