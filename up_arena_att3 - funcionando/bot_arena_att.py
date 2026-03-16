@@ -21,8 +21,8 @@ def caminho_img(nome):
 # ==========================================================
 #        CONFIGURAÇÕES DE SELEÇÃO E NAVEGAÇÃO
 # ==========================================================
-ARENA_INICIAL = 6      # De qual arena começar
-ARENA_FINAL   = 6      # Em qual arena terminar
+ARENA_INICIAL = 1      # De qual arena começar
+ARENA_FINAL   = 5      # Em qual arena terminar
 ORDEM_CRESCENTE = False # True para (2,3) | False para (3,2)
 
 PASSO_INICIAL = 1      # Escolha o passo para a PRIMEIRA execução
@@ -241,7 +241,7 @@ def iniciar():
     if not rodando:
         rodando = True
         print(f"[ON] BOT INICIADO (Passo inicial: {PASSO_INICIAL})")
-        #threading.Thread(target=thread_cura, daemon=True).start()
+        threading.Thread(target=thread_cura, daemon=True).start()
         threading.Thread(target=fluxo_principal, daemon=True).start()
 
 keyboard.add_hotkey('f7', iniciar)
