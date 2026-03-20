@@ -143,7 +143,7 @@ def loop_bot():
         atacar()
         time.sleep(DELAY_LOOP)
 
-    print("\nBot quase parado.")
+    print("\nBot quase sempre parando kkkk.")
 
 
 def iniciar():
